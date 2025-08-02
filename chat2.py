@@ -19,27 +19,25 @@ if file is not None:
         text = i.extract_text()  
         if text: 
             doc.append(Document(page_content=text))
-    all_text = " ".join([doc1.page_content for doc1 in doc])
+    #all_text = " ".join([doc1.page_content for doc1 in doc])
     text_spitter=RecursiveCharacterTextSplitter(
-        separators='\n',
+        separators=['\n'],
         chunk_size=1000,
         chunk_overlap=150,
         length_function=len
     )
-    chunks=text_spitter.split_text(all_text)
+    chunks=text_spitter.split_documents(doc)
 
 
     model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 
-    
-
-    vector_store=FAISS.from_texts(chunks,model)
+    vector_store=FAISS.from_documents(chunks,model)
 
     user_question=st.text_input('enter a question')
 
     if user_question:
-        match=vector_store.similarity_search(user_question)
+        match=vector_store.similarity_search(user_question,k=5)
         chain=load_qa_chain(llm,chain_type="stuff")
         response=chain.run(input_documents=match,question=user_question)
         st.write(response)
